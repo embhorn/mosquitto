@@ -78,10 +78,12 @@ Contributors:
 #include "util_mosq.h"
 
 #ifdef WITH_TLS
+static bool is_tls_initialized = false;
 int tls_ex_index_mosq = -1;
+
+#ifndef USE_WOLFSSL
 UI_METHOD *_ui_method = NULL;
 
-static bool is_tls_initialized = false;
 
 /* Functions taken from OpenSSL s_server/s_client */
 static int ui_open(UI *ui)
@@ -125,7 +127,7 @@ UI_METHOD *net__get_ui_method(void)
 {
 	return _ui_method;
 }
-
+#endif /* !USE_WOLFSSL */
 #endif
 
 int net__init(void)
@@ -160,7 +162,9 @@ void net__cleanup(void)
 #  endif
 
 	CONF_modules_unload(1);
+#ifndef USE_WOLFSSL
 	cleanup_ui_method();
+#endif
 #endif
 
 #ifdef WITH_SRV
@@ -189,7 +193,9 @@ void net__init_tls(void)
 #if !defined(OPENSSL_NO_ENGINE)
 	ENGINE_load_builtin_engines();
 #endif
+#ifndef USE_WOLFSSL
 	setup_ui_method();
+#endif
 	if(tls_ex_index_mosq == -1){
 		tls_ex_index_mosq = SSL_get_ex_new_index(0, "client context", NULL, NULL, NULL);
 	}
